@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> 그림 던지기 by 스내핑 핑거스 </title>
+    <style>
+        body {
+            margin: 0;
+            padding-top: 70px; /* 컨트롤러 높이에 맞게 조정 */
+        }
+        .controlsContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            z-index: 10;
+        }
+        .movableImage {
+            position: absolute;
+            max-width: 1100px; /* 이미지 최대 너비 설정 */
+            max-height: 1100px; /* 이미지 최대 높이 설정 */
+            min-width: 10px; /* 이미지 최소 너비 설정 */
+            min-height: 10px; /* 이미지 최소 높이 설정 */
+            width: auto; /* 너비를 auto로 설정하여 비율 유지 */
+            height: auto; /* 높이를 auto로 설정하여 비율 유지 */
+            object-fit: contain; /* 이미지가 비율을 유지하면서 요소 안에 들어가도록 설정 */
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        button, input[type="file"], input[type="color"], input[type="range"] {
+            padding: 5px 10px;
+            margin: 0 5px;
+            font-size: 16px;
+        }
+        .adBanner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: #ffffe0; /* 눈에 띄는 배경색 */
+            color: #333; /* 글자색 */
+            text-align: center;
+            padding: 10px;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.2); /* 하단에 그림자 효과 */
+            z-index: 9; /* 컨트롤 박스 바로 아래 */
+        }
+
+        .controlsContainer {
+            top: 50px; /* 광고 배너 높이만큼 아래로 내리기 */
+        margin-right: 10px; /* 라벨과 컨트롤 사이의 간격 조정 */
+        font-size: 14px; /* 라벨의 폰트 크기 조정 */
+    }
+    .movableImage {
+        position: fixed;
+        will-change: transform; /* 성능 최적화를 위해 변화할 속성 명시 */
+    }
+    @media screen and (max-width: 768px) {
+        /* 모바일 디바이스를 위한 최대 이미지 크기 */
+        .movableImage {
+            max-width: 80px; /* 모바일에서는 최대 너비를 작게 설정 */
+            max-height: 80px; /* 모바일에서는 최대 높이를 작게 설정 */
+        }
+    }
+
+    /* 데스크톱 뷰 스타일 */
+    @media screen and (min-width: 769px) {
+        .controlsContainer {
+            flex-direction: row; /* 가로로 요소들을 배치 */
+            justify-content: space-between;
+            padding: 10px 20px;
+        }
+        .controlItem {
+            margin: 0 10px; /* 가로 마진을 적절히 설정 */
+        }
+        /* ... 추가적인 데스크톱 스타일 ... */
+    }
+  
+    @keyframes popAndFall {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+        50% {
+            /* 최고점에서의 변화량을 이전보다 더 크게 설정 */
+            transform: translate(var(--translateX), calc(var(--peakY) * 1.5)) rotate(var(--rotation));
+        }
+        100% {
+            transform: translate(calc(var(--translateX) * 1), calc(0px + var(--fallY))) rotate(calc(var(--rotation) * 3));
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="adBanner">
+        <a href="https://wadiz.onelink.me/gmeA/97450d7j" target="_blank">디지털 드로잉의 시작 프로크리에이트 한국어 메뉴얼과 함께하세요!4월5일까지! <b>무료 체험판 배포중!</b></a>  
+    </div>
+    
+    <div class="controlsContainer">
+        <div class="fileUploadInfo">
+            <label for="imageLoader">이미지 업로드(JPG,PNG,GIF) :</label>
+            <input type="file" id="imageLoader" accept="image/jpeg, image/png, image/gif">
+        </div>
+        <button id="resetButton">다시 시작하기</button>
+        <div class="colorPickerInfo">
+            <label for="backgroundColorPicker">배경색 지정:</label>
+            <input type="color" id="backgroundColorPicker" name="background-color" value="#ffffff">
+
+        </div>
+        <div id="imageContainer" style="position: relative;">
+            <!-- 이미지들이 여기에 추가됩니다. -->
+        </div>
+        
+        
+    </div>
+
+    <script>
+        let uploadedImageSrc; // 업로드된 이미지의 src를 저장할 전역 변수
+// 배경색 변경 이벤트 리스너
+document.getElementById('backgroundColorPicker').addEventListener('change', function(event) {
+    // document.body.style.backgroundColor를 통해 배경색 변경
+    document.body.style.backgroundColor = event.target.value;
+});
+document.getElementById('resetButton').addEventListener('click', function() {
+    // 업로드된 이미지 제거
+    document.querySelectorAll('.movableImage').forEach(image => {
+        image.remove();
+    });
+    // 배경색 초기화
+    document.body.style.backgroundColor = "#ffffff"; // 초기 배경색으로 되돌리기
+});
+
+        document.getElementById('imageLoader').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedImageSrc = e.target.result; // 업로드된 이미지의 src를 저장
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.addEventListener('click', function(event) {
+            if (event.target.closest('.controlsContainer') || !uploadedImageSrc) return;
+        
+            const numberOfImages = Math.floor(Math.random() * 20 + 1); // 5에서 15 사이의 랜덤한 숫자
+        
+            for (let i = 0; i < numberOfImages; i++) {
+                const imageElement = document.createElement('img');
+                imageElement.src = uploadedImageSrc;    
+                imageElement.classList.add('movableImage');
+                document.body.appendChild(imageElement);
+        
+                imageElement.onload = function() {
+                    const size = Math.random() * (150- 60) + 60; // 더 작은 최대 크기
+                    imageElement.style.width = `${size}px`;
+                    imageElement.style.height = 'auto';
+        
+                    // 클릭 위치 조정: 이미지의 중심이 클릭 위치에 오도록
+                    imageElement.style.left = `${event.clientX - (size / 2)}px`;
+                    imageElement.style.top = `${event.clientY - (size / 2)}px`;
+        
+                    // 랜덤 방향 설정
+                    const angle = Math.random() * Math.PI * 2;
+                    const translateX = Math.cos(angle) * 220; // X축 이동 거리
+                    const peakY = -(Math.random() * 50 + 200); // 최고점에서 Y축 변화량
+                    const fallY = window.innerHeight - event.clientY + size; // Y축 떨어질 총 거리
+                    const rotation = Math.random() * 360; // 회전 각도
+                    const rotationDirection = Math.random() < 0.5 ? -1 : 1; // 0.5의 확률로 시계 반시계 방향 설정
+
+
+        
+                    imageElement.style.setProperty('--translateX', `${translateX}px`);
+                    imageElement.style.setProperty('--peakY', `${peakY}px`);
+                    imageElement.style.setProperty('--fallY', `${fallY}px`);
+                    imageElement.style.setProperty('--rotation', `${rotation}deg`);
+        
+                    const duration = Math.random() * 1 + 1.5; // 애니메이션 지속 시간
+                    imageElement.style.animation = `popAndFall ${duration}s ease-in-out forwards`;
+        
+                    imageElement.addEventListener('animationend', function() {
+                        imageElement.remove();
+                    });
+                };
+            }
+        });
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </script>
+</body>
+</html>
