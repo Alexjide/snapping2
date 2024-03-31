@@ -5,91 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> 그림 던지기 by 스내핑 핑거스 </title>
     <style>
-     /* 모바일 최적화 CSS */
-body {
-    margin: 0;
-    padding-top: 70px; /* 컨트롤러 높이에 맞게 조정 */
-    font-size: 16px; /* 기본 폰트 크기 설정 */
-}
+        body {
+            margin: 0;
+            padding-top: 70px; /* 컨트롤러 높이에 맞게 조정 */
+        }
+        .controlsContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            z-index: 10;
+        }
+        .movableImage {
+            position: absolute;
+            max-width: 1100px; /* 이미지 최대 너비 설정 */
+            max-height: 1100px; /* 이미지 최대 높이 설정 */
+            min-width: 10px; /* 이미지 최소 너비 설정 */
+            min-height: 10px; /* 이미지 최소 높이 설정 */
+            width: auto; /* 너비를 auto로 설정하여 비율 유지 */
+            height: auto; /* 높이를 auto로 설정하여 비율 유지 */
+            object-fit: contain; /* 이미지가 비율을 유지하면서 요소 안에 들어가도록 설정 */
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        button, input[type="file"], input[type="color"], input[type="range"] {
+            padding: 5px 10px;
+            margin: 0 5px;
+            font-size: 16px;
+        }
+        .adBanner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: #ffffe0; /* 눈에 띄는 배경색 */
+            color: #333; /* 글자색 */
+            text-align: center;
+            padding: 10px;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.2); /* 하단에 그림자 효과 */
+            z-index: 9; /* 컨트롤 박스 바로 아래 */
+        }
 
-.controlsContainer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-    z-index: 10;
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    font-size: 14px; /* 라벨의 폰트 크기 조정 */
-}
-
-.controlsContainer div {
-    display: inline-block; /* 요소들을 가로로 배치 */
-    margin: 5px; /* 각 요소들 사이의 간격 조절 */
-}
-
-.fileUploadInfo input[type="file"],
-.colorPickerInfo input[type="color"] {
-    display: none; /* 기본 파일 업로드 및 컬러 피커 숨김 */
-}
-
-.fileUploadInfo label,
-.colorPickerInfo label {
-    padding: 5px 10px;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-}
-
-.fileUploadInfo label:hover,
-.colorPickerInfo label:hover {
-    background-color: #0056b3;
-}
-
-#resetButton {
-    padding: 5px 10px;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-#resetButton:hover {
-    background-color: #c82333;
-}
-
-/* 이미지 컨테이너 스타일 수정 */
-#imageContainer {
-    position: relative;
-    padding-top: 40px; /* 이미지가 버튼 위로 올라가지 않도록 */
-}
-
-.movableImage {
-    position: absolute;
-    max-width: 1100px; /* 이미지 최대 너비 설정 */
-    max-height: 1100px; /* 이미지 최대 높이 설정 */
-    min-width: 10px; /* 이미지 최소 너비 설정 */
-    min-height: 10px; /* 이미지 최소 높이 설정 */
-    width: auto; /* 너비를 auto로 설정하여 비율 유지 */
-    height: auto; /* 높이를 auto로 설정하여 비율 유지 */
-    object-fit: contain; /* 이미지가 비율을 유지하면서 요소 안에 들어가도록 설정 */
-    will-change: transform; /* 성능 최적화를 위해 변화할 속성 명시 */
-    transition: transform 0.5s ease-in-out;
-}
-
-@media screen and (max-width: 768px) {
-    .controlsContainer {
-        flex-direction: column; /* 작은 화면에서 세로로 요소들을 배치 */
-        align-items: center; /* 요소들을 중앙 정렬 */
+        .controlsContainer {
+            top: 50px; /* 광고 배너 높이만큼 아래로 내리기 */
+        margin-right: 10px; /* 라벨과 컨트롤 사이의 간격 조정 */
+        font-size: 14px; /* 라벨의 폰트 크기 조정 */
     }
-    .fileUploadInfo,
-    .colorPickerInfo {
-        margin-bottom: 10px; /* 요소들 사이의 간격 조정 */
+    .movableImage {
+        position: fixed;
+        will-change: transform; /* 성능 최적화를 위해 변화할 속성 명시 */
     }
-}
+    @media screen and (max-width: 768px) {
+        .controlsContainer {
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+        .controlItem {
+            width: auto; /* 모바일에서는 너비를 자동으로 설정하여 줄바꿈되도록 함 */
+            margin: 10px 0;
+        }
+        label {
+            margin-bottom: 4px; /* 레이블과 컨트롤 사이의 간격 */
+        }
+        /* 추가적인 모바일 스타일 */
+    }
+    
     /* 데스크톱 뷰 스타일 */
     @media screen and (min-width: 769px) {
         .controlsContainer {
